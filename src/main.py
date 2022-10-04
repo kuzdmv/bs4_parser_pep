@@ -99,6 +99,7 @@ def pep(session):
     )
     results = [('Статус', 'Количество')]
     count_dict = {}
+    total_sum = 0
     for table_tag in tqdm(table_tags):
         tbody_tag = find_tag(table_tag, 'tbody')
         tr_tags = tbody_tag.find_all('tr')
@@ -118,20 +119,15 @@ def pep(session):
                 )
                 status_tag = dl_tag.find(string='Status')
                 status = status_tag.parent.next_sibling.next_sibling.text
-                if status not in count_dict:
-                    count_dict[status] = 1
-                else:
-                    count_dict[status] += 1
+                count_dict[status] = count_dict.get(status, 0) + 1
+                total_sum += 1
                 if status not in EXPECTED_STATUS[pep_status]:
                     logging.warning(
                         f'''Несовпадают статусы по адресу {link_pep}.
                         Ожидался - {EXPECTED_STATUS[pep_status]}.
                         Получили - {status}.'''
                     )
-    total_sum = 0
-    for i in count_dict:
-        results.append([i, count_dict[i]])
-        total_sum += count_dict[i]
+    results += list(count_dict.items())
     results.append(['Total ', total_sum])
     return results
 
